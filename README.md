@@ -1,63 +1,83 @@
-# 姘存潐璋冩牎鍙?路 Metasequoia Tuner
+# 水杉调校台 · Metasequoia Tuner
 
-涓€涓粰 [姘存潐杈撳叆娉昡(https://msime.app/)锛圡etasequoia IME锛夌敤鐨?Windows 灏忓伐鍏凤細**鍙鍖栬皟鍊欓€夌獥鐨偆銆佸瓧浣撳拰缂栫爜鏄剧ず锛屾敼瀹屼竴閿噸鍚緭鍏ユ硶**銆?
-涓嶇敤鍐嶆墜鍐?`skin.toml` / `config.toml`锛屼篃涓嶇敤姣忔鏀瑰畬鍘讳换鍔＄鐞嗗櫒閲屾潃杩涚▼銆?
-![娣辫壊涓婚](screenshots/dark.png)
+[![build](https://github.com/doublemarkpro/metasequoia-tuner/actions/workflows/build.yml/badge.svg)](https://github.com/doublemarkpro/metasequoia-tuner/actions/workflows/build.yml)
+[![release](https://img.shields.io/github/v/release/doublemarkpro/metasequoia-tuner)](https://github.com/doublemarkpro/metasequoia-tuner/releases)
 
-## 鍔熻兘
 
-### 鐨偆鍙傛暟锛堝啓鍏?`skin.toml`锛?
-- **闂磋窛涓庡竷灞€**锛氬€欓€夐棿璺?`item_gap`銆佸唴杈硅窛 `padding`銆佸€欓€夊彸鐣欑櫧銆佸簭鍙烽棿璺濄€佸€欓€夋渶灏忓搴︺€佸崱鐗囧渾瑙掋€佸崱鐗囨渶灏忓搴︺€佸唴瀹瑰乏鍐呯缉 `number_inset`
-- **閫変腑绔栨潯**锛氬搴?`selected_bar_width`銆佹槸鍚︽樉绀?`show_selected_bar`銆佽创鍐?楠戣竟 `selected_bar_inside`
-- **棰滆壊**锛氶€変腑鑳屾櫙 / 閫変腑鏂囧瓧 / 寮鸿皟鑹?/ 鎮仠鑹?/ 绔栨潯鑹诧紝娴呰壊娣辫壊鍚勪竴濂楋紝鐐硅壊鍧楃洿鎺ヨ皟鑹叉澘鍙栬壊
-- **闅愯棌鎷奸煶鏃惰鍓┖鐧?*锛歚trim_hidden_preedit_gap`锛岃В鍐崇紪鐮佸尯闅愯棌鍚庡€欓€夌獥涓婃柟鐣欎竴鏉＄┖鐧界殑闂
+一个给 [水杉输入法](https://msime.app/)（Metasequoia IME）用的 Windows 小工具：**可视化调候选窗皮肤、字体和编码显示，改完一键重启输入法**。
 
-### 瀛椾綋锛堝啓鍏?`config.toml`锛?
-- **鍊欓€夌獥涓诲瓧浣?* `english_font`锛堟按鏉夎缃噷鍙€屽€欓€夌獥涓诲瓧浣撱€嶏紝榛樿 `Segoe UI`锛?- **涓枃鍥為€€瀛椾綋** `font`
-- **瀛楀彿** `font_size`
-- 瀛椾綋涓嬫媺鑷姩鍒楀嚭绯荤粺宸茶瀛椾綋锛岄瑙堝疄鏃剁敤鎵€閫夊瓧浣撴覆鏌?
-### 缂栫爜锛堟嫾闊筹級鏄剧ず
+不用再手写 `skin.toml` / `config.toml`，也不用每次改完去任务管理器里杀进程。
 
-- **鍊欓€夌獥鏄剧ず鎷奸煶** `candidate_window_preedit_style`锛坄pinyin` / `empty`锛?- **杈撳叆妗嗘樉绀烘嫾闊?* `tsf_preedit_style`锛坄raw` / `empty`锛?
-### 鍏跺畠
+![深色主题](screenshots/dark.png)
 
-- **瀹炴椂棰勮**锛? 涓€欓€夐」鐨勬ā鎷熷€欓€夌獥锛屾敼浠讳綍鍙傛暟绔嬪埢閲嶇粯
-- **娣辫壊 / 娴呰壊涓婚**锛氬伐鍏疯嚜韬袱濂楅厤鑹诧紝鍙垏鎹?- **鍗＄墖鎶樺彔**锛氭爣棰樻爮鐐瑰嚮鎶樺彔/灞曞紑
-- **璁颁綇涓婃鐘舵€?*锛氫富棰樸€佹姌鍙犵姸鎬併€佹墍閫夌毊鑲ゃ€佺獥鍙ｅぇ灏?- **涓€閿噸鍚?*锛歚淇濆瓨骞堕噸鍚痐 浼氭彁鏉冪粨鏉?`MetasequoiaImeServer` 骞堕噸鏂版媺璧凤紝鏀瑰畬绔嬪埢鐢熸晥
+## 功能
 
-![娴呰壊涓婚](screenshots/light.png)
+### 皮肤参数（写入 `skin.toml`）
 
-## 蹇€熷紑濮?
-1. 涓嬭浇 [Releases](../../releases) 閲岀殑 `MetasequoiaTuner.exe`
-2. 鍙屽嚮杩愯锛堝崟鏂囦欢锛屼緷璧栫郴缁熻嚜甯︾殑 .NET Framework 4.8锛屾棤闇€瀹夎锛?3. 宸︿晶閫夌毊鑲?鈫?鍙宠竟璋冨弬鏁?鈫?鐐广€屼繚瀛樺苟閲嶅惎銆?
-> 銆岄噸鍚按鏉夈€嶄細寮?UAC锛歚MetasequoiaImeServer` 浠ョ鐞嗗憳鏉冮檺杩愯锛屼笉鎻愭潈鏉€涓嶆帀銆?
-## 鑷繁缂栬瘧
+- **间距与布局**：候选间距 `item_gap`、内边距 `padding`、候选右留白、序号间距、候选最小宽度、卡片圆角、卡片最小宽度、内容左内缩 `number_inset`
+- **选中竖条**：宽度 `selected_bar_width`、是否显示 `show_selected_bar`、贴内/骑边 `selected_bar_inside`
+- **颜色**：选中背景 / 选中文字 / 强调色 / 悬停色 / 竖条色，浅色深色各一套，点色块直接调色板取色
+- **隐藏拼音时裁剪空白**：`trim_hidden_preedit_gap`，解决编码区隐藏后候选窗上方留一条空白的问题
 
-闇€瑕佺郴缁熻嚜甯︾殑 .NET Framework 4.x锛圵indows 10/11 榛樿鑷甫锛夛細
+### 字体（写入 `config.toml`）
+
+- **候选窗主字体** `english_font`（水杉设置里叫「候选窗主字体」，默认 `Segoe UI`）
+- **中文回退字体** `font`
+- **字号** `font_size`
+- 字体下拉自动列出系统已装字体，预览实时用所选字体渲染
+
+### 编码（拼音）显示
+
+- **候选窗显示拼音** `candidate_window_preedit_style`（`pinyin` / `empty`）
+- **输入框显示拼音** `tsf_preedit_style`（`raw` / `empty`）
+
+### 其它
+
+- **实时预览**：9 个候选项的模拟候选窗，改任何参数立刻重绘
+- **深色 / 浅色主题**：工具自身两套配色，可切换
+- **卡片折叠**：标题栏点击折叠/展开
+- **记住上次状态**：主题、折叠状态、所选皮肤、窗口大小
+- **一键重启**：`保存并重启` 会提权结束 `MetasequoiaImeServer` 并重新拉起，改完立刻生效
+
+![浅色主题](screenshots/light.png)
+
+## 快速开始
+
+1. 下载 [Releases](../../releases) 里的 `MetasequoiaTuner.exe`
+2. 双击运行（单文件，依赖系统自带的 .NET Framework 4.8，无需安装）
+3. 左侧选皮肤 → 右边调参数 → 点「保存并重启」
+
+> 「重启水杉」会弹 UAC：`MetasequoiaImeServer` 以管理员权限运行，不提权杀不掉。
+
+## 自己编译
+
+需要系统自带的 .NET Framework 4.x（Windows 10/11 默认自带）：
 
 ```powershell
 .\build.ps1
-# 浜х墿锛歞ist\MetasequoiaTuner.exe
+# 产物：dist\MetasequoiaTuner.exe
 ```
 
-娌℃湁浠讳綍绗笁鏂逛緷璧栵紝`csc.exe` 鐩存帴缂栬瘧锛屼笉闇€瑕佽 Visual Studio銆?
-## 閰嶇疆鏂囦欢浣嶇疆
+没有任何第三方依赖，`csc.exe` 直接编译，不需要装 Visual Studio。
 
-| 鍐呭 | 璺緞 |
+## 配置文件位置
+
+| 内容 | 路径 |
 |---|---|
-| 鐨偆 | `%LOCALAPPDATA%\metasequoiaime\skins\<鐨偆鍚?\skin.toml` |
-| 鍏ㄥ眬澶栬锛堝瓧浣撱€佺紪鐮侊級 | `%LOCALAPPDATA%\metasequoiaime\config.toml` |
-| 鏈伐鍏疯嚜韬缃?| `%LOCALAPPDATA%\Programs\MetasequoiaTuner\settings.ini` |
+| 皮肤 | `%LOCALAPPDATA%\metasequoiaime\skins\<皮肤名>\skin.toml` |
+| 全局外观（字体、编码） | `%LOCALAPPDATA%\metasequoiaime\config.toml` |
+| 本工具自身设置 | `%LOCALAPPDATA%\Programs\MetasequoiaTuner\settings.ini` |
 
-## 璇存槑
+## 说明
 
-- 鏈伐鍏峰彧鏄?*鏀归厤缃枃浠?+ 閲嶅惎杩涚▼**鐨勫浘褰㈢晫闈紝涓嶄慨鏀规按鏉夋湰浣擄紝涔熶笉娉ㄥ叆浠讳綍涓滆タ
-- 淇濆瓨鍓嶅缓璁浠?`metasequoiaime` 鐩綍锛涙敼鍧忎簡鎶婂搴旈敭鍒犳帀鍗冲彲鎭㈠
-- 銆屼繚瀛樺苟閲嶅惎銆嶄細鍚屾椂鍐欏叆 `config.toml`锛屽鏋滄按鏉夎缃獥鍙ｅ紑鐫€锛屽缓璁厛鍏虫帀锛岄伩鍏嶄簰鐩歌鐩?
-## 鑷磋阿
+- 本工具只是**改配置文件 + 重启进程**的图形界面，不修改水杉本体，也不注入任何东西
+- 保存前建议备份 `metasequoiaime` 目录；改坏了把对应键删掉即可恢复
+- 「保存并重启」会同时写入 `config.toml`，如果水杉设置窗口开着，建议先关掉，避免互相覆盖
 
-- [姘存潐杈撳叆娉?Metasequoia IME](https://github.com/metasequoiaime) 鈥斺€?鐨偆涓庨厤缃牸寮忕殑鐏垫劅鏉ユ簮
-- 鐨偆瀛楁鍚箟鍙傝€?`msime-windows` 婧愮爜涓?`candidate_skin_catalog.cpp` / `CandidateList.cpp`
+## 致谢
+
+- [水杉输入法 Metasequoia IME](https://github.com/metasequoiaime) —— 皮肤与配置格式的灵感来源
+- 皮肤字段含义参考 `msime-windows` 源码中 `candidate_skin_catalog.cpp` / `CandidateList.cpp`
 
 ## License
 
