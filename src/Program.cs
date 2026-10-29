@@ -208,6 +208,7 @@ namespace MetasequoiaTuner
             using (var b = new SolidBrush(T.Text))
                 g.DrawString(Title ?? "", T.H2, b, 18, 14);
 
+            if (OnToggle == null) { base.OnPaint(e); return; }
             float cx = Width - 26, cy = 24;
             using (var pen = new Pen(T.Muted, 1.8f))
             {
@@ -523,6 +524,12 @@ namespace MetasequoiaTuner
         Panel side, scroll, right, bottom;
         List<Card> cards = new List<Card>();
         string currentSkin = "";
+        bool loading, dirty, restoringSelection;
+        int activeTab;
+        Panel tabs;
+        Button[] tabButtons;
+        Label skinHeading;
+        Card cardPrev, cardGeom, cardColor, cardFont;
 
         public MainForm()
         {
@@ -531,7 +538,8 @@ namespace MetasequoiaTuner
             T.Apply(dark);
 
             Text = "水杉调校台 · Metasequoia Tuner";
-            Width = 1120; Height = 1180;
+            Width = 1200; Height = 900;
+            MinimumSize = new Size(1000, 700);
             if (st.ContainsKey("window"))
             {
                 try
@@ -564,7 +572,7 @@ namespace MetasequoiaTuner
                 Font = T.Body
             };
             rescan.FlatAppearance.BorderColor = T.Line;
-            rescan.Click += (s, e) => LoadSkins(null);
+            rescan.Click += (s, e) => { if (ConfirmDiscard()) LoadSkins(currentSkin); };
 
             skinList.Dock = DockStyle.Fill;
             skinList.BackColor = T.Card;
@@ -583,7 +591,16 @@ namespace MetasequoiaTuner
                 using (var b = new SolidBrush(sel ? Color.FromArgb(28, 28, 30) : T.Text))
                     e.Graphics.DrawString(skinList.Items[e.Index].ToString(), skinList.Font, b, e.Bounds.X + 10, e.Bounds.Y + 6);
             };
-            skinList.SelectedIndexChanged += (s, e) => LoadSkin();
+            skinList.SelectedIndexChanged += (s, e) => {
+                if (restoringSelection || loading) return;
+                if (!ConfirmDiscard()) {
+                    restoringSelection = true;
+                    skinList.SelectedIndex = skinList.Items.IndexOf(currentSkin);
+                    restoringSelection = false;
+                    return;
+                }
+                LoadSkin();
+            };
 
             side.Controls.Add(skinList);
             side.Controls.Add(rescan);
@@ -593,19 +610,19 @@ namespace MetasequoiaTuner
 
             scroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = T.Bg, Padding = new Padding(6, 10, 6, 6) };
 
-            var cardPrev = new Card { Title = "实时预览", Left = 0, Top = 0, Width = 820, ContentHeight = 210 };
+            cardPrev = new Card { Title = "实时预览", Left = 0, Top = 0, Width = 820, ContentHeight = 210 };
             cardPrev.Height = cardPrev.ContentHeight;
             preview.Left = 18; preview.Top = 48; preview.Width = 784; preview.Height = 144;
             preview.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             cardPrev.Controls.Add(preview);
-            tgDarkPreview = new Toggle { Left = 736, Top = 18, Width = 46 };
-            var lblDark = new Label { Text = "深色预览", Left = 650, Top = 22, Width = 80, ForeColor = T.Muted, Font = T.Body, BackColor = T.Card };
+            tgDarkPreview = new Toggle { Left = 736, Top = 18, Width = 46, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            var lblDark = new Label { Anchor = AnchorStyles.Top | AnchorStyles.Right, Text = "深色预览", Left = 650, Top = 22, Width = 80, ForeColor = T.Muted, Font = T.Body, BackColor = T.Card };
             tgDarkPreview.Checked = st.ContainsKey("preview_dark") && st["preview_dark"] == "1";
             tgDarkPreview.CheckedChanged += (s, e) => UpdatePreview();
             cardPrev.Controls.Add(tgDarkPreview);
             cardPrev.Controls.Add(lblDark);
 
-            var cardGeom = new Card { Title = "间距与布局", Left = 0, Top = 0, Width = 820, ContentHeight = 448 };
+            cardGeom = new Card { Title = "间距与布局", Left = 0, Top = 0, Width = 820, ContentHeight = 448 };
             cardGeom.Height = cardGeom.ContentHeight;
             int y = 46;
             sGap = AddSlider(cardGeom, "候选间距 item_gap", ref y, 0, 64, out vGap);
@@ -633,7 +650,7 @@ namespace MetasequoiaTuner
             cardGeom.Controls.Add(tgTrim);
             cardGeom.Controls.Add(lblTrim);
 
-            var cardColor = new Card { Title = "颜色", Left = 0, Top = 0, Width = 820, ContentHeight = 390 };
+            cardColor = new Card { Title = "颜色", Left = 0, Top = 0, Width = 820, ContentHeight = 390 };
             cardColor.Height = cardColor.ContentHeight;
             cardColor.Controls.Add(new Label { Text = "浅色", Left = 18, Top = 46, Width = 60, Font = T.H2, ForeColor = T.Text, BackColor = T.Card });
             cardColor.Controls.Add(new Label { Text = "深色", Left = 420, Top = 46, Width = 60, Font = T.H2, ForeColor = T.Text, BackColor = T.Card });
@@ -652,23 +669,25 @@ namespace MetasequoiaTuner
 
             tgCandPreedit = new Toggle { Left = 470, Top = 340, Width = 46, BackColor = T.Card };
             var lblCandP = new Label { Text = "候选窗显示拼音", Left = 330, Top = 342, Width = 132, ForeColor = T.Muted, BackColor = T.Card };
-            cardColor.Controls.Add(tgCandPreedit);
-            cardColor.Controls.Add(lblCandP);
+
             tgTsfPreedit = new Toggle { Left = 160, Top = 340, Width = 46, BackColor = T.Card };
             var lblTsfP = new Label { Text = "输入框显示拼音", Left = 18, Top = 342, Width = 132, ForeColor = T.Muted, BackColor = T.Card };
-            cardColor.Controls.Add(tgTsfPreedit);
-            cardColor.Controls.Add(lblTsfP);
 
-            var cardFont = new Card { Title = "字体", Left = 0, Top = 0, Width = 820, ContentHeight = 210 };
+
+            cardFont = new Card { Title = "字体", Left = 0, Top = 0, Width = 820, ContentHeight = 255 };
             cardFont.Height = cardFont.ContentHeight;
-            cardFont.Controls.Add(new Label { Text = "候选窗主字体 english_font", Left = 18, Top = 52, Width = 150, ForeColor = T.Muted, BackColor = T.Card });
-            cardFont.Controls.Add(new Label { Text = "中文回退字体 font", Left = 18, Top = 92, Width = 150, ForeColor = T.Muted, BackColor = T.Card });
+            cardFont.Controls.Add(new Label { Text = "候选窗主字体", Left = 18, Top = 52, Width = 180, ForeColor = T.Muted, BackColor = T.Card });
+            cardFont.Controls.Add(new Label { Text = "中文回退字体", Left = 18, Top = 92, Width = 180, ForeColor = T.Muted, BackColor = T.Card });
             cbFont = new ComboBox { Left = 200, Top = 48, Width = 300, DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat, BackColor = T.Card2, ForeColor = T.Text, Font = T.Body };
             cbEnglishFont = new ComboBox { Left = 200, Top = 88, Width = 300, DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat, BackColor = T.Card2, ForeColor = T.Text, Font = T.Body };
             cbFont.SelectedIndexChanged += (s, e) => UpdatePreview();
             cbEnglishFont.SelectedIndexChanged += (s, e) => UpdatePreview();
             cardFont.Controls.Add(cbFont);
             cardFont.Controls.Add(cbEnglishFont);
+            tgTsfPreedit.Top = 190; lblTsfP.Top = 192;
+            tgCandPreedit.Top = 190; lblCandP.Top = 192;
+            cardFont.Controls.Add(tgCandPreedit); cardFont.Controls.Add(lblCandP);
+            cardFont.Controls.Add(tgTsfPreedit); cardFont.Controls.Add(lblTsfP);
             int fy = 128;
             sFontSize = AddSlider(cardFont, "字号 font_size", ref fy, 12, 32, out vFontSize);
             cardFont.Controls.Add(new Label { Text = "预览使用所选字体与字号", Left = 500, Top = 52, Width = 300, ForeColor = T.Muted, BackColor = T.Card });
@@ -678,6 +697,18 @@ namespace MetasequoiaTuner
             cards.Add(cardColor);
             cards.Add(cardFont);
             foreach (var c in cards) scroll.Controls.Add(c);
+            skinHeading = new Label { Text = "皮肤调校", Font = T.H1, ForeColor = T.Text, Left = 8, Top = 6, Height = 38, Width = 700 };
+            scroll.Controls.Add(skinHeading);
+            tabs = new Panel { Height = 44, BackColor = T.Bg };
+            tabButtons = new[] { MakeButton("布局", false), MakeButton("颜色", false), MakeButton("字体与编码", false) };
+            for (int i = 0; i < tabButtons.Length; i++) {
+                int index = i;
+                tabButtons[i].Left = i * 140; tabButtons[i].Top = 2;
+                tabButtons[i].Click += (sender, args) => SelectTab(index);
+                tabs.Controls.Add(tabButtons[i]);
+            }
+            scroll.Controls.Add(tabs);
+            scroll.Resize += (sender, args) => Relayout();
 
             bottom = new Panel { Dock = DockStyle.Bottom, Height = 78, BackColor = T.Bg, Padding = new Padding(6, 8, 6, 6) };
             var btnRow = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 44, BackColor = T.Bg };
@@ -718,34 +749,67 @@ namespace MetasequoiaTuner
             foreach (var sw in new[] { swLightSel, swLightSelText, swLightAccent, swLightHover, swLightBar, swDarkSel, swDarkSelText, swDarkAccent, swDarkHover, swDarkBar })
                 sw.Picked += (s, e) => { UpdateColorLabels(); UpdatePreview(); };
 
-            foreach (var c in cards) c.OnToggle = () => ToggleCard(c);
-            if (st.ContainsKey("collapsed"))
-            {
-                var set = st["collapsed"].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < cards.Count; i++)
-                    if (set.Contains(i.ToString())) cards[i].SetExpanded(false);
-            }
-            Relayout();
+            foreach (var sld in new[] { sGap, sPad, sPadRight, sNumberGap, sItemMinWidth, sRadius, sMinWidth, sBarWidth, sInset, sFontSize })
+                sld.ValueChanged += (sender, args) => MarkDirty();
+            foreach (var toggle in new[] { tgBar, tgBarInside, tgTrim, tgCandPreedit, tgTsfPreedit })
+                toggle.CheckedChanged += (sender, args) => MarkDirty();
+            foreach (var sw in new[] { swLightSel, swLightSelText, swLightAccent, swLightHover, swLightBar, swDarkSel, swDarkSelText, swDarkAccent, swDarkHover, swDarkBar })
+                sw.Picked += (sender, args) => MarkDirty();
+            cbFont.SelectedIndexChanged += (sender, args) => MarkDirty();
+            cbEnglishFont.SelectedIndexChanged += (sender, args) => MarkDirty();
+            tgBar.CheckedChanged += (sender, args) => UpdateBarControls();
+            SelectTab(0);
             Shown += (s, e) => { scroll.AutoScrollPosition = new Point(0, 0); };
-            FormClosing += (s, e) => SaveSettings();
+            FormClosing += (s, e) => { if (!ConfirmDiscard()) e.Cancel = true; else SaveSettings(); };
 
             LoadSkins(st.ContainsKey("skin") ? st["skin"] : null);
         }
 
-        void ToggleCard(Card c)
+        void MarkDirty()
         {
-            c.SetExpanded(!c.Expanded);
+            if (loading || doc == null) return;
+            dirty = true;
+            status.Text = "●  有未保存的更改";
+        }
+
+        bool ConfirmDiscard()
+        {
+            if (!dirty) return true;
+            var result = MessageBox.Show("当前修改尚未保存。是否先保存？", "未保存的更改",
+                MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            if (result == DialogResult.Cancel) return false;
+            if (result == DialogResult.Yes) { SaveDoc(false); return !dirty; }
+            dirty = false;
+            return true;
+        }
+
+        void UpdateBarControls()
+        {
+            tgBarInside.Enabled = tgBar.Checked;
+            sBarWidth.Enabled = tgBar.Checked;
+        }
+
+        void SelectTab(int index)
+        {
+            activeTab = index;
+            for (int i = 0; i < tabButtons.Length; i++) {
+                tabButtons[i].Tag = i == index ? "primary" : null;
+                tabButtons[i].BackColor = i == index ? T.Accent : T.Card2;
+                tabButtons[i].ForeColor = i == index ? Color.FromArgb(28, 28, 30) : T.Text;
+            }
             Relayout();
-            SaveSettings();
         }
 
         void Relayout()
         {
-            int top = 0;
-            foreach (var c in cards)
-            {
-                c.Top = top;
-                top += c.Height + 12;
+            if (tabs == null || cardPrev == null) return;
+            int width = Math.Max(820, scroll.ClientSize.Width - 24);
+            cardPrev.SetBounds(6, 50, width, 210);
+            tabs.SetBounds(6, 272, width, 44);
+            Card[] editors = { cardGeom, cardColor, cardFont };
+            for (int i = 0; i < editors.Length; i++) {
+                editors[i].Visible = i == activeTab;
+                editors[i].SetBounds(6, 328, width, editors[i].ContentHeight);
             }
         }
 
@@ -767,6 +831,7 @@ namespace MetasequoiaTuner
             T.Apply(!light);
             Recolor(this);
             Invalidate(true);
+            BeginInvoke((Action)(() => UpdatePreview()));
             SaveSettings();
         }
 
@@ -778,7 +843,7 @@ namespace MetasequoiaTuner
                 else if (c is PreviewPanel) { }
                 else if (c is FlatSlider || c is Toggle || c is Swatch) c.BackColor = T.Card;
                 else if (c is ListBox) { c.BackColor = T.Card; c.ForeColor = T.Text; }
-                else if (c is ComboBox) { c.BackColor = T.Card2; c.ForeColor = T.Text; }
+                else if (c is ComboBox || c is NumericUpDown) { c.BackColor = T.Card2; c.ForeColor = T.Text; }
                 else if (c is Button)
                 {
                     var b = (Button)c;
@@ -830,7 +895,13 @@ namespace MetasequoiaTuner
                 Font = new Font("Consolas", 11F, FontStyle.Bold),
                 BackColor = T.Card
             };
-            s.ValueChanged += (a, b) => v.Text = s.Value.ToString();
+            v.Visible = false;
+            var number = new NumericUpDown { Left = 656, Top = y - 3, Width = 78, Minimum = min, Maximum = max, Value = min, BackColor = T.Card2, ForeColor = T.Text, Font = T.Body, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            s.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            s.ValueChanged += (a, b) => { v.Text = s.Value.ToString(); number.Value = s.Value; };
+            number.ValueChanged += (a, b) => s.Value = (int)number.Value;
+            s.EnabledChanged += (a, b) => number.Enabled = s.Enabled;
+            parent.Controls.Add(number);
             parent.Controls.Add(l);
             parent.Controls.Add(s);
             parent.Controls.Add(v);
@@ -853,9 +924,10 @@ namespace MetasequoiaTuner
 
         void LoadSkins(string prefer)
         {
+            loading = true;
             skinList.Items.Clear();
             string root = SkinRoot();
-            if (!Directory.Exists(root)) { status.Text = "找不到皮肤目录：" + root; return; }
+            if (!Directory.Exists(root)) { status.Text = "找不到皮肤目录：" + root; loading = false; return; }
             foreach (var dir in Directory.GetDirectories(root).OrderBy(d => d))
                 if (File.Exists(Path.Combine(dir, "skin.toml")))
                     skinList.Items.Add(Path.GetFileName(dir));
@@ -863,6 +935,8 @@ namespace MetasequoiaTuner
             int idx = prefer != null ? skinList.Items.IndexOf(prefer) : -1;
             if (idx < 0) idx = skinList.Items.IndexOf("rimetune-orange");
             skinList.SelectedIndex = idx >= 0 ? idx : (skinList.Items.Count > 0 ? 0 : -1);
+            loading = false;
+            if (skinList.SelectedIndex >= 0) LoadSkin();
         }
 
         int Clamp(string s, int def, int min, int max)
@@ -882,7 +956,9 @@ namespace MetasequoiaTuner
         void LoadSkin()
         {
             if (skinList.SelectedItem == null) return;
+            loading = true;
             currentSkin = skinList.SelectedItem.ToString();
+            skinHeading.Text = "皮肤调校  ·  " + currentSkin;
             string path = Path.Combine(SkinRoot(), currentSkin, "skin.toml");
             doc = TomlDoc.Load(path);
 
@@ -914,7 +990,10 @@ namespace MetasequoiaTuner
             LoadConfigOptions();
             UpdateColorLabels();
             UpdatePreview();
-            status.Text = "已加载：" + path;
+            UpdateBarControls();
+            loading = false;
+            dirty = false;
+            status.Text = "已加载：" + currentSkin;
         }
 
         void SetSwatch(Swatch s, string text, Color fallback)
@@ -1001,12 +1080,12 @@ namespace MetasequoiaTuner
             catch { }
         }
 
-        void SaveConfigOptions()
+        bool SaveConfigOptions()
         {
             try
             {
                 string cfg = ConfigPath();
-                if (!File.Exists(cfg)) return;
+                if (!File.Exists(cfg)) throw new FileNotFoundException("找不到全局配置文件", cfg);
                 var cd = TomlDoc.Load(cfg);
                 cd.Set("appearance", "candidate_window_preedit_style", tgCandPreedit.Checked ? "\"pinyin\"" : "\"empty\"");
                 cd.Set("appearance", "tsf_preedit_style", tgTsfPreedit.Checked ? "\"raw\"" : "\"empty\"");
@@ -1014,8 +1093,9 @@ namespace MetasequoiaTuner
                 if (cbEnglishFont.SelectedItem != null) cd.Set("appearance", "font", "\"" + cbEnglishFont.SelectedItem.ToString() + "\"");
                 cd.Set("appearance", "font_size", sFontSize.Value.ToString());
                 cd.Save();
+                return true;
             }
-            catch (Exception ex) { status.Text = "写 config.toml 失败：" + ex.Message; }
+            catch (Exception ex) { status.Text = "写 config.toml 失败：" + ex.Message; return false; }
         }
 
         void SaveDoc(bool restart)
@@ -1062,7 +1142,9 @@ namespace MetasequoiaTuner
                 status.Text = "保存失败：" + ex.Message;
                 return;
             }
-            SaveConfigOptions();
+            if (!SaveConfigOptions()) { dirty = true; return; }
+            dirty = false;
+            status.Text = "已保存：" + currentSkin;
             SaveSettings();
             if (restart) RestartIme();
         }
